@@ -177,7 +177,7 @@ echo $whiskey->getDeliveryPrice().PHP_EOL;
 $potatoes = new Food('Potatoes', 450, 15, 20);
 echo $potatoes->getPrice().PHP_EOL;
 
-$tracks = ['Cowboys from Hell', 'Primal Concrete Sledge','Domination', 'Cemetary Gates'];
+$tracks = ['Cowboys from Hell', 'Primal Concrete Sledge','Domination', 'Cemetery Gates'];
 $cowboysFromHell = new MusicAlbum('Cowboys from Hell', 'Pantera', '48:00', $tracks, 500);
 echo $cowboysFromHell->getPrice().PHP_EOL;
 
