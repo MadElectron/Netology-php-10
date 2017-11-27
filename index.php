@@ -1,163 +1,185 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Новости</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
 <?php
 
-    class News
+trait calculateDiscount
+{
+    public function calculateDiscount($baseDiscount)
     {
-        private $id;
-        private $title;
-        private $content;
-        private $source;
-        private $date;
-        private $comments =[];
+        return ($this->weight > 10) ? $baseDiscount : 0;
+    }
+}
 
-        public function __construct($id, $title, $content, $source, $date = null)
-        {
-            $this->id = $id;
-            $this->title = $title;
-            $this->content = $content;
-            $this->source = $source;
-            $this->date = $date or new DateTime();
-        }
+class Product
+{
+    protected $title;
+    protected $price;
+    protected $discount;
+    protected $deliveryPrice;    
 
-
-        public function getId()
-        {
-            return $this->id;
-        }
-
-        public function getTitle()
-        {
-            return $this->title;
-        }
-
-        public function getContent()
-        {
-            return $this->content;
-        }
-
-        public function getSource()
-        {
-            return $this->source;
-        }
-
-        public function getDate()
-        {
-            return $this->date;
-        }
-
-        public function getComments($json)
-        {
-            $data = json_decode($json, true);
-            $comments = [];
-
-            foreach ($data as $d) {
-                if ($d['newsId'] == $this->id) {
-                    $comments[] = new Comment($d['username'], $d['content']);
-                }
-            }
-
-            return $comments;
-        }
-
-
-        public function setTitle($title)
-        {
-            $this->title = $title;
-        }
-
-        public function setContent($content)
-        {
-            $this->content = $content;
-        }
-
-        public function setSource($source)
-        {
-            $this->source = $source;
-        }
-
-        public function setDate($date)
-        {
-            $this->date = $date;
-        }
+    public function __construct($title, $price, $discount)
+    {
+        $this->title = $title;
+        $this->price = $price;
+        $this->discount = $discount;
+        $this->deliveryPrice = $discount ? 300 : 250;
     }
 
-    class Comment {
-        private $username;
-        private $content;
-        private $date;
-
-        public function __construct($username, $content) {
-            $this->username = $username;
-            $this->content = $content;
-            $this->date = new DateTime();
-        }
-
-        public function getUsername()
-        {
-            return $this->username;
-        }
-
-        public function getContent()
-        {
-            return $this->content;
-        }
-
-        public function getDate()
-        {
-            return $this->date;
-        }
+    public function getTitle()
+    {
+        return $this->title;
     }
 
-    $json = file_get_contents('json/news.json');
-    $data = json_decode($json, true);
+    public function setTitle($title)
+    {
+        $this->title = $title;
 
-    if (!$data) {
-        echo '<p>Ошибка! Данные исходный json-файл невалиден!</p>';
-        exit;
+        return $this;
     }
 
-    $news = [];
-
-    foreach ($data as $d) {
-        $date = new DateTime(isset($d['date']) ? $d['date'] : 'now');
-        $news[] = new News($d['id'], $d['title'], $d['content'], $d['source'], $date);
+    public function getPrice()
+    {
+        return round($this->price*(1 - 0.01 * $this->discount));
     }
 
-    $commentJson = file_get_contents('json/comments.json');
-?>
-    <div class="container">
-        <h1>Новости</h1>
-        <?php foreach($news as $article) { 
-            $source = $article->getSource();
-            $comments = $article->getComments($commentJson);
-        ?>
-        <article class="news-article">
-            <h2 class="news-title"><?php echo $article->getId().'. '.$article->getTitle(); ?></h2>    
-            <p class="news-date"><?php echo $article->getDate()->format("Y-m-d H:i") ?></p>
-            <hr>
-            <p class="news-content"><?php echo $article->getContent() ?></p>
-            <p class="news-source">Источник: 
-                <a href="<?php echo $source ?>" target="_blank"><?php echo $source ?></a>
-            </p>
-            <hr>
-            <div class="news-comment-box">
-                <p class="news-comment-line">Комментарии[<?php echo count($comments); ?>]</p>  
+    public function setPrice($price)
+    {
+        $this->price = $price;
 
-                <?php foreach ($comments as $comment) { ?>
-                    <p class="news-comment-username"><?php echo $comment->getUsername(); ?> написал(а):</p>
-                    <p class="news-comment"><?php echo $comment->getContent(); ?></p>
-                <?php } ?>
-            </div>
-        </article>
-        <?php } ?>
-    </div>
-</body>
-</html>
+        return $this;
+    }
+
+    public function getDiscount()
+    {
+        return $this->discount;
+    }
+
+    public function setDiscount($discount)
+    {
+        $this->discount = $discount;
+
+        return $this;
+    }
+
+    public function getDeliveryPrice()
+    {
+        return $this->deliveryPrice;
+    }
+
+    public function setDeliveryPrice($deliveryPrice)
+    {
+        $this->deliveryPrice = $deliveryPrice;
+
+        return $this;
+    }
+
+}
+
+class MusicAlbum extends Product
+{
+    private $duration;
+    private $tracks;
+
+    public function __construct($title, $artist, $duration, array $tracks, $price)
+    {
+        parent::__construct($title, $price, $discount = 10);
+
+        $this->price;
+        $this->tracks = $tracks;
+    }
+
+
+    public function getDuration()
+    {
+        return $this->duration;
+    }
+
+    public function setDuration($duration)
+    {
+        $this->duration = $duration;
+
+        return $this;
+    }
+
+    public function getTracks()
+    {
+        return $this->tracks;
+    }
+
+    public function setTracks($tracks)
+    {
+        $this->tracks = $tracks;
+
+        return $this;
+    }
+
+
+}
+
+class Pencil extends Product
+{
+    private $color = [127, 127, 127];
+
+    public function __construct($title, $price, array $color) {
+        parent::__construct($title, $price, $discount = 10);
+
+        $this->color = $color;
+    }
+
+    public function getColor()
+    {
+        return $this->color;
+    }
+
+    public function setColor($color)
+    {
+        $this->color = $color;
+
+        return $this;
+    }
+}
+
+class Food extends Product
+{
+    private $weight;
+
+    use calculateDiscount;
+
+    public function __construct($title, $price, $weight, $discount) {
+
+        $this->weight = $weight;
+
+        $calculatedDiscount = $this->calculateDiscount($discount);
+
+        parent::__construct($title, $price, $calculatedDiscount);
+        
+    }
+
+    public function getWeight()
+    {
+        return $this->weight;
+    }
+
+    public function setWeight($weight)
+    {
+        $this->weight = $weight;
+
+        return $this;
+    }
+}
+
+
+// ==== Main code ====
+
+$whiskey = new Food('Whiskey', 4000, 2, 10);
+
+echo $whiskey->getPrice().PHP_EOL;
+echo $whiskey->getDeliveryPrice().PHP_EOL;
+
+$potatoes = new Food('Potatoes', 450, 15, 20);
+echo $potatoes->getPrice().PHP_EOL;
+
+$tracks = ['Cowboys from Hell', 'Primal Concrete Sledge','Domination', 'Cemetary Gates'];
+$cowboysFromHell = new MusicAlbum('Cowboys from Hell', 'Pantera', '48:00', $tracks, 500);
+echo $cowboysFromHell->getPrice().PHP_EOL;
+
+$yellowPencil = new Pencil('Standard boring yellow pencil', 20, [255, 255, 0]);
+echo $yellowPencil->getPrice().PHP_EOL;

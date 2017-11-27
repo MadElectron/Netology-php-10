@@ -1,14 +1,55 @@
 <?php
 
-class Car
-{           
+/* ==== Vehicle and Car ==== */
+
+interface Colorable
+{
+    public function getColor();    
+}
+
+interface Paintable
+{
+    public function paint($r, $g, $b);
+}
+
+class CityVehicle
+{
     const WHEEL_COUNT = 4;
+    
+    protected $speed = 0;
 
-    private $wheelCount = self::WHEEL_COUNT;
+    protected static $maxSpeed;
+ 
+    /*
+    * Linear increase Vehicle's speed depending on pressing throttle time
+    */
+    public function throttle($time)
+    {
+        if ($this->speed < self::$maxSpeed) {
+            $this->speed += $time;
+        }   
+    }
+
+    /*
+    * Linear decrease Vehicle's speed depending on pressing break time
+    */
+    public function break($time) 
+    {
+        if ($this->speed) {
+            $this->speed = 3*$time; //We break faster than throttle
+        }
+    }
+
+    public static function setMaxSpeed($speed) 
+    {
+        self::$maxSpeed = $speed;
+    }
+}
+
+class Car extends CityVehicle implements Paintable, Colorable
+{           
+    private $wheelCount = parent::WHEEL_COUNT;
     private $color = [255, 255, 255];
-    private $speed = 0;
-
-    private static $maxSpeed;
 
     public function __construct($color) 
     {   
@@ -53,7 +94,7 @@ class Car
         if (!$this->wheelCount) {
             echo 'На машине не установлены колёса'.PHP_EOL;
         }
-        elseif ($wheelCount > self::WHEEL_COUNT) {
+        elseif ($wheelCount > parent::WHEEL_COUNT) {
             echo 'У машины не бывает столько колёс'.PHP_EOL;
         }
         elseif ($wheelCount > $this->wheelCount) {
@@ -66,65 +107,65 @@ class Car
 
     public function takeOnWheels($wheelCount)
     {
-        if ($this->wheelCount == self::WHEEL_COUNT) {
+        if ($this->wheelCount == parent::WHEEL_COUNT) {
             echo 'На машине установлены все колёса'.PHP_EOL;                
         }
-        elseif ($wheelCount + $this->wheelCount > self::WHEEL_COUNT) {
+        elseif ($wheelCount + $this->wheelCount > parent::WHEEL_COUNT) {
             echo 'Вы пытаетесь установить колёс больше, чем может быть в машине. Установлено: '.$this->wheelCount.PHP_EOL;
         }
         else {
             $this->wheelCount += $wheelCount;
         }
     }    
-
-    /*
-    * Linear increase Car's speed depending on pressing throttle time
-    */
-    public function throttle($time)
-    {
-        if ($this->speed < self::$maxSpeed) {
-            $this->speed += $time;
-        }   
-    }
-
-    /*
-    * Linear decrease Car's speed depending on pressing break time
-    */
-    public function break($time) 
-    {
-        if ($this->speed) {
-            $this->speed = 3*$time; //We break faster than throttle
-        }
-    }
-
-    public static function setMaxSpeed($speed) 
-    {
-        self::$maxSpeed = $speed;
-    }
 }
 
+/* ==== Gadget and TvSet ==== */
 
-class TvSet
-{   
-    private $serialNumber;
-    private $channels = ['Первый', 'Россия'];
-    private $powerOn = false;
-    private $volume = 0;
-    private $currentChannel = 0;
+interface Powerable
+{
+    public function clickPower();
+} 
+
+class Gadget implements Powerable
+{
+    protected $serialNumber;
+    protected $powerOn = false;
 
     public function __construct($number)
     {
         $this->serialNumber = $number;
     }
 
-    public function getChannels()
+    public function getSerialNumber()
     {
-        return $this->channels;
+        return $this->serialNumber;
     }
 
     public function getPowerOn()
     {
         return $this->powerOn;
+    }
+
+    public function clickPower() 
+    {
+        $this->powerOn = !$this->powerOn;
+    }
+}
+
+class TvSet extends Gadget
+{   
+    private $channels = ['Первый', 'Россия'];
+    private $volume = 0;
+    private $currentChannel = 0;
+
+    public function __construct($number)
+    {
+        parent::__construct($number);
+    }
+
+    public function getChannels()
+    {
+        return $this->channels;
     }
 
     public function getVolume()
@@ -137,22 +178,16 @@ class TvSet
         return $this->powerOn ? $this->currentChannel : null;
     }
 
-
-    public function clickPower() 
-    {
-        $this->powerOn = !$this->powerOn;
-    }
-
     public function clickTune($channels)
     {
-        if ($this->$powerOn) {
+        if ($this->powerOn) {
             $this->channels = array_merge($this->channels, $channels);
         }
     }
 
     public function clickVolumePlus($time)
     {
-        if ($this->$powerOn) {
+        if ($this->powerOn) {
             $newVolume = $this->volume + $time;
             $this->volume = ($newVolume < 100) ? $newVolume : 100;
         }
@@ -160,7 +195,7 @@ class TvSet
 
     public function clickVolumeMinus($time)
     {
-        if ($this->$powerOn) {
+        if ($this->powerOn) {
             $newVolume = $this->volume - $time;
             $this->volume = ($newVolume > 0) ? $newVolume : 0;
         }
@@ -168,7 +203,7 @@ class TvSet
 
     public function clickChannelPlus()
     {
-        if ($this->$powerOn) {
+        if ($this->powerOn) {
             if ($this->currentChannel == count($this->channels) - 1) {
                 $this->currentChannel = 0;
             }
@@ -180,7 +215,7 @@ class TvSet
 
     public function clickChannelMinus()
     {
-        if ($this->$powerOn) {
+        if ($this->powerOn) {
             if ($this->currentChannel == 0) {
                 $this->currentChannel = count($this->channels) - 1;
             }
@@ -191,17 +226,32 @@ class TvSet
     }
 }
 
+/* ==== WritingItem and Pen==== */
 
-class Pen 
+class WritingItem implements Colorable
+{
+    protected $color;
+
+    public function __construct($color)
+    {
+        $this->color = $color;
+    }
+
+    public function getColor()
+    {
+        return $this->color;
+    }
+}
+
+class Pen extends WritingItem
 {
     const PT_INK_RATE = 0.01; //per cent of ink level, spent on 1 char pt
 
-    private $color;
     private $inkLevel = 100;
 
     public function __construct($color = [0, 0, 255])
     {
-        $this->color = $color;
+        parent::__construct($color);
     }
 
     public function getInkLevel()
@@ -210,7 +260,7 @@ class Pen
     }
 
     /*
-    * Decreasing ink level depending on written chars and font size (in pt)
+     * Decreasing ink level depending on written chars and font size (in pt)
     */
     public function write($chars, $fontSize)
     {
@@ -234,12 +284,19 @@ class Pen
     }
 }
 
-class Duck 
-{
-    private $color;
-    private $weight;
+//==== Toy and Duck ====
 
-    public function __construct($color = [255, 255, 0], $weight = 100) // Standard yellow rubber duck
+interface Pressable 
+{
+    public function press();
+}
+
+class Toy implements Pressable
+{
+    protected $color;
+    protected $weight;
+
+    public function __construct($color, $weight)
     {
         $this->color = $color;
         $this->weight = $weight;
@@ -250,9 +307,23 @@ class Duck
         return $this->color;
     }
 
-    public function getWeigth()
+    public function getWeight()
     {
         return $this->weight;
+    }
+
+    public function press()
+    {
+        echo "Making sound!".PHP_EOL;
+    }
+} 
+
+class Duck extends Toy implements Pressable
+{
+
+    public function __construct($color = [255, 255, 0], $weight = 100) // Standard yellow rubber duck
+    {
+        parent::__construct($color, $weight);
     }
 
     public function press()
@@ -261,11 +332,30 @@ class Duck
     }
 }
 
-class Product
+/* ===== Item and Product ==== */
+
+interface Discountable
 {
-    private $name;
-    private $description;
-    private $category;
+    public function getDiscount();
+    public function setDiscount($discount);
+}
+
+class Item
+{
+    protected $name;
+    protected $description;
+    protected $category;
+
+    public function __construct($name, $description, $category)
+    {
+        $this->name = $name;
+        $this->description = $description;
+        $this->category = $category;
+    }    
+}
+
+class Product extends Item implements Discountable
+{
     private $weight = 100; // Standard weight
     private $price = 0;    // Standard price
     private $discount = 0; // Standard discount
@@ -278,9 +368,7 @@ class Product
         $category = "Uncategorized", 
         $discount = 0)
     {
-        $this->name = $name;
-        $this->description = $description;
-        $this->category = $category;
+        parent::__construct($name, $description, $category);
 
         $this->setWeight($weight);
         $this->setPrice($price);
@@ -309,7 +397,7 @@ class Product
 
     public function getPrice()
     {
-        $price = $round($this->price * (1 - 0.01 * ($this->discount)), 2);
+        $price = round($this->price * (1 - 0.01 * ($this->discount)), 2);
 
         return $price;
     }
@@ -359,17 +447,35 @@ class Product
 
 
 /* ==== Main code ==== */
+
 $silverCar = new Car([192, 192, 192]);
 $scarletCar = new Car([255, 36, 0]);
+
+$silverCar->setMaxSpeed(300);
+echo $silverCar->getMaxSpeed(300).PHP_EOL;
 
 $tvSet1 = new TvSet('TV00001');
 $tvSet2 = new TvSet('TV00002');
 
+$tvSet1->clickPower();
+$tvSet1->clickVolumePlus(3);
+$tvSet1->clickVolumeMinus(2);
+echo $tvSet1->getVolume().PHP_EOL;
+
 $bluePen = new Pen();
 $greenPen = new Pen([0, 255, 0]);
+
+print_r($bluePen->getColor());
 
 $standardYellowDuck = new Duck();
 $hugeCyanDuck = new Duck([0, 255, 255], 3000);
 
+echo $hugeCyanDuck->getWeight().PHP_EOL;
+$hugeCyanDuck->press();
+
 $iPhone = new Product('iPhone X', 174, 74999, 'The smartphone of future.', 'Smartphones', 0);
 $ps4Pro = new Product('Playstation 4 Pro', 3300, 29999, 'Greatness awaits.', 'Videogame consoles', 10);
+
+
+$iPhone->setDiscount(25);
+echo $iPhone->getPrice();
